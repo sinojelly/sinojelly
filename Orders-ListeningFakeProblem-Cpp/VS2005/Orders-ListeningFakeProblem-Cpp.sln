@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{B27FCA9B-3BEF-477B-8525-B786F41069DC}") = "OrdersTests", "OrdersTests/OrdersTests.vcproj", "{F001FDFD-CFE6-415F-B834-F3D8D7C074DD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{07470B61-0EFB-49BD-A10D-C54231A8D67E} = {07470B61-0EFB-49BD-A10D-C54231A8D67E}
+		{1E96FC31-95A5-49F2-B515-EE936130B69A} = {1E96FC31-95A5-49F2-B515-EE936130B69A}
+		{CD600AF6-7BDC-41F5-930D-492DF7AD5503} = {CD600AF6-7BDC-41F5-930D-492DF7AD5503}
+	EndProjectSection
+EndProject
+Project("{B27FCA9B-3BEF-477B-8525-B786F41069DC}") = "Orders", "Orders/Orders.vcproj", "{CD600AF6-7BDC-41F5-930D-492DF7AD5503}"
+	ProjectSection(ProjectDependencies) = postProject
+		{07470B61-0EFB-49BD-A10D-C54231A8D67E} = {07470B61-0EFB-49BD-A10D-C54231A8D67E}
+		{1E96FC31-95A5-49F2-B515-EE936130B69A} = {1E96FC31-95A5-49F2-B515-EE936130B69A}
+	EndProjectSection
+EndProject
+Project("{B27FCA9B-3BEF-477B-8525-B786F41069DC}") = "Untouchable", "../Orders-Untouchable-Cpp/VS2005/Untouchable/Untouchable.vcproj", "{1E96FC31-95A5-49F2-B515-EE936130B69A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{07470B61-0EFB-49BD-A10D-C54231A8D67E} = {07470B61-0EFB-49BD-A10D-C54231A8D67E}
+	EndProjectSection
+EndProject
+Project("{B27FCA9B-3BEF-477B-8525-B786F41069DC}") = "Support", "../Support-GTest-Cpp/VS2005/Support/Support.vcproj", "{07470B61-0EFB-49BD-A10D-C54231A8D67E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F001FDFD-CFE6-415F-B834-F3D8D7C074DD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F001FDFD-CFE6-415F-B834-F3D8D7C074DD}.Debug|Win32.Build.0 = Debug|Win32
+		{CD600AF6-7BDC-41F5-930D-492DF7AD5503}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CD600AF6-7BDC-41F5-930D-492DF7AD5503}.Debug|Win32.Build.0 = Debug|Win32
+		{1E96FC31-95A5-49F2-B515-EE936130B69A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1E96FC31-95A5-49F2-B515-EE936130B69A}.Debug|Win32.Build.0 = Debug|Win32
+		{07470B61-0EFB-49BD-A10D-C54231A8D67E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{07470B61-0EFB-49BD-A10D-C54231A8D67E}.Debug|Win32.Build.0 = Debug|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

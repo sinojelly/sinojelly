@@ -1,0 +1,184 @@
+diff -Nur Orders-ListeningFakeProblem-Cpp_orig/Orders-Untouchable-Cpp/include/Shipper.h Orders-ListeningFakeProblem-Cpp/Orders-Untouchable-Cpp/include/Shipper.h
+--- Orders-ListeningFakeProblem-Cpp_orig/Orders-Untouchable-Cpp/include/Shipper.h	2009-07-20 11:44:04.000000000 +0800
++++ Orders-ListeningFakeProblem-Cpp/Orders-Untouchable-Cpp/include/Shipper.h	2009-11-13 17:06:32.622405700 +0800
+@@ -28,8 +28,8 @@
+ 
+ 	virtual void addItem(const std::string& sku, int quantity, const Weight& weight);
+ 
+-private:
+-	const ShippingOption& m_option;
++protected:
++    const ShippingOption& m_option;	
+ 	Weight m_weightAccumulator;
+ 
+ private:
+diff -Nur Orders-ListeningFakeProblem-Cpp_orig/src/ShippingOrder.cpp Orders-ListeningFakeProblem-Cpp/src/ShippingOrder.cpp
+--- Orders-ListeningFakeProblem-Cpp_orig/src/ShippingOrder.cpp	2009-07-20 11:44:04.000000000 +0800
++++ Orders-ListeningFakeProblem-Cpp/src/ShippingOrder.cpp	2009-11-13 17:15:51.978200800 +0800
+@@ -15,12 +15,17 @@
+ void ShippingOrder::prepareToShip()
+ {
+ 	Shipper shipper(getBaseOrder()->getOrderId(), m_option);
+-	for (LineItemIterator items = getBaseOrder()->getItems(); items != getBaseOrder()->endItems(); items++)
+-	{
+-		LineItem item = *items;
+-		shipper.addItem(item.getSku(), item.getQuantity(), item.getExtendedWeight());
+-	}
+-	m_shippingTotal = shipper.total();
++    prepareToShip(&shipper);	
++}
++
++void ShippingOrder::prepareToShip(Shipper *pShipper)
++{    
++    for (LineItemIterator items = getBaseOrder()->getItems(); items != getBaseOrder()->endItems(); items++)
++    {
++        LineItem item = *items;
++        pShipper->addItem(item.getSku(), item.getQuantity(), item.getExtendedWeight());
++    }
++    m_shippingTotal = pShipper->total();
+ }
+ 
+ Money ShippingOrder::getShippingTotal()
+diff -Nur Orders-ListeningFakeProblem-Cpp_orig/src/ShippingOrder.h Orders-ListeningFakeProblem-Cpp/src/ShippingOrder.h
+--- Orders-ListeningFakeProblem-Cpp_orig/src/ShippingOrder.h	2009-07-20 11:44:04.000000000 +0800
++++ Orders-ListeningFakeProblem-Cpp/src/ShippingOrder.h	2009-11-13 17:21:00.585600700 +0800
+@@ -16,6 +16,7 @@
+ #include "Weight.h"
+ #include "ShippingOption.h"
+ #include "Order.h"
++#include "Shipper.h"
+ 
+ class ShippingOrder
+ {
+@@ -27,13 +28,16 @@
+ 	virtual ~ShippingOrder() { }
+ 
+ 	virtual void prepareToShip();
++    virtual void prepareToShip(Shipper *pShipper);
+ 	virtual Money getShippingTotal();
+ 	virtual OrderPtr getBaseOrder();
+ 
+-private:
+-	OrderPtr m_baseOrder;
+-	const ShippingOption& m_option;
++private:    
++	OrderPtr m_baseOrder;	
+ 	Money m_shippingTotal;
++
++public:
++    const ShippingOption& m_option;
+ };
+ 
+ typedef counted_ptr<ShippingOrder> ShippingOrderPtr;
+diff -Nur Orders-ListeningFakeProblem-Cpp_orig/test/OrderTest.cpp Orders-ListeningFakeProblem-Cpp/test/OrderTest.cpp
+--- Orders-ListeningFakeProblem-Cpp_orig/test/OrderTest.cpp	2009-07-20 11:44:08.000000000 +0800
++++ Orders-ListeningFakeProblem-Cpp/test/OrderTest.cpp	2009-11-13 17:43:55.342427200 +0800
+@@ -16,23 +16,7 @@
+ #include "Weight.h"
+ #include "Product.h"
+ #include "LineItem.h"
+-
+-class TestableOrder : public Order
+-{
+-public:
+-	TestableOrder(const std::string& accountId) : Order(accountId)
+-	{ }
+-
+-protected:
+-	virtual std::string getOrderIdFromGenerator() const
+-	{
+-		return m_accountId + ":10001";
+-	}
+-
+-	virtual void reserveProduct(const LineItem& item) const
+-	{
+-	}
+-};
++#include "TestableOrder.h"
+ 
+ class OrderTest : public testing::Test
+ {
+diff -Nur Orders-ListeningFakeProblem-Cpp_orig/test/ShippingOrderTest.cpp Orders-ListeningFakeProblem-Cpp/test/ShippingOrderTest.cpp
+--- Orders-ListeningFakeProblem-Cpp_orig/test/ShippingOrderTest.cpp	2009-07-20 11:44:08.000000000 +0800
++++ Orders-ListeningFakeProblem-Cpp/test/ShippingOrderTest.cpp	2009-11-13 17:44:03.873622600 +0800
+@@ -13,6 +13,22 @@
+ #include <gtest/gtest.h>
+ 
+ #include "ShippingOrder.h"
++#include "Shipper.h"
++#include "TestableOrder.h"
++
++class TestableShipper : public Shipper
++{
++public:
++    TestableShipper(const std::string& orderId, const ShippingOption& option) : Shipper(orderId, option)
++    {
++    }
++    virtual Money total() const
++    {
++        return m_option.rate(m_weightAccumulator);
++    }
++protected:
++private:
++};
+ 
+ class ShippingOrderTest : public testing::Test
+ {
+@@ -36,7 +52,7 @@
+ 
+ 	virtual void SetUp()
+ 	{
+-		baseOrder = OrderPtr(new Order("ACCOUNTID"));
++		baseOrder = OrderPtr(new TestableOrder("ACCOUNTID"));
+ 		shippingOrder = ShippingOrderPtr(new ShippingOrder(baseOrder, option));
+ 	}
+ };
+@@ -44,7 +60,7 @@
+ TEST_F(ShippingOrderTest, testShippingAmountSingle)
+ {
+ 	baseOrder->add(oneLarge);
+-	shippingOrder->prepareToShip();
++	shippingOrder->prepareToShip(new TestableShipper(shippingOrder->getBaseOrder()->getOrderId(), shippingOrder->m_option));
+ 	ASSERT_EQ(option.rate(oneLarge.getExtendedWeight()), shippingOrder->getShippingTotal());
+ }
+ 
+@@ -52,7 +68,7 @@
+ {
+ 	baseOrder->add(oneLarge);
+ 	baseOrder->add(oneSmall);
+-	shippingOrder->prepareToShip();
++	shippingOrder->prepareToShip(new TestableShipper(shippingOrder->getBaseOrder()->getOrderId(), shippingOrder->m_option));
+ 	Weight weight = oneLarge.getExtendedWeight().add(oneSmall.getExtendedWeight());
+ 	ASSERT_EQ(option.rate(weight), shippingOrder->getShippingTotal());
+ }
+diff -Nur Orders-ListeningFakeProblem-Cpp_orig/test/TestableOrder.h Orders-ListeningFakeProblem-Cpp/test/TestableOrder.h
+--- Orders-ListeningFakeProblem-Cpp_orig/test/TestableOrder.h	1970-01-01 08:00:00.000000000 +0800
++++ Orders-ListeningFakeProblem-Cpp/test/TestableOrder.h	2009-11-13 17:43:44.186248600 +0800
+@@ -0,0 +1,26 @@
++#pragma once
++
++#include "Order.h"
++#include <gtest/gtest.h>
++
++#include "Money.h"
++#include "Weight.h"
++#include "Product.h"
++#include "LineItem.h"
++
++class TestableOrder : public Order
++{
++public:
++	TestableOrder(const std::string& accountId) : Order(accountId)
++	{ }
++
++protected:
++	virtual std::string getOrderIdFromGenerator() const
++	{
++		return m_accountId + ":10001";
++	}
++
++	virtual void reserveProduct(const LineItem& item) const
++	{
++	}
++};
+\ No newline at end of file
